@@ -2,7 +2,7 @@ version: "3"
 
 dotenv: [".env"]
 env:
-  TEST_DB_URL: postgres://kobie:pa88word@localhost:5432/hazel_test?sslmode=disable
+  TEST_DB_URL: postgres://userone:pa88word@localhost:5432/hazel_test?sslmode=disable
 tasks:
   run:
     cmd: go run ./cmd/server

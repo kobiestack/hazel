@@ -32,7 +32,10 @@ func main() {
 	}
 
 	mailer := mail.NewMailer(cfg.MailConfig)
-	handler := handlers.NewHandler(services.NewUserService(postgres.NewUserStore(db), mailer))
+	us := services.NewUserService(postgres.NewUserStore(db), mailer)
+	ws := services.NewWorkspaceService(postgres.NewWorkspaceStore(db))
+
+	handler := handlers.NewHandler(us, ws)
 
 	app := &application{
 		handler: handler,

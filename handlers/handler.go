@@ -13,11 +13,13 @@ func init() {
 }
 
 type Handler struct {
-	us *services.UserService
+	us  *services.UserService
+	wks *services.WorkspaceService
 }
 
-func NewHandler(us *services.UserService) *Handler {
+func NewHandler(us *services.UserService, wks *services.WorkspaceService) *Handler {
 	return &Handler{
-		us: us,
+		us:  us,
+		wks: wks,
 	}
 }
