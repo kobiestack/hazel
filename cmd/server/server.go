@@ -7,7 +7,7 @@ import (
 )
 
 type application struct {
-	handler *handlers.Handler
+	h *handlers.Handler
 }
 
 func (app *application) start() error {

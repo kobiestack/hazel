@@ -8,10 +8,13 @@ func (s *application) routes() *gin.Engine {
 	router := gin.Default()
 
 	// users
-	router.POST("/users", s.handler.CreateUser)
-	router.POST("/users/verify", s.handler.VerifyUser)
-	router.GET("/users/:id", s.handler.GetUser)
-	router.DELETE("/users/:id", s.handler.DeleteUser)
+	router.POST("auth/register", s.h.CreateUser)
+	router.POST("auth/login")
+	router.POST("/auth/verify", s.h.VerifyUser)
+	router.GET("/users/:id", s.h.GetUser)
+	router.DELETE("/users/:id", s.h.DeleteUser)
 
+	// users
+	router.POST("/workspaces", s.h.CreateWorkspace)
 	return router
 }

@@ -38,7 +38,7 @@ func main() {
 	handler := handlers.NewHandler(us, ws)
 
 	app := &application{
-		handler: handler,
+		h: handler,
 	}
 
 	slog.Info("Starting server")
