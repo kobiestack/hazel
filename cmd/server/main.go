@@ -9,15 +9,9 @@ import (
 	"github.com/freekobie/hazel/postgres"
 	"github.com/freekobie/hazel/services"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/joho/godotenv"
 )
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		panic(err)
-	}
-
 	cfg := loadConfig()
 
 	db, err := pgxpool.New(context.Background(), cfg.PostgresURL)

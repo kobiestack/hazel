@@ -76,7 +76,8 @@ func (h *Handler) LoginUser(c *gin.Context) {
 	session, err := h.us.NewSession(c.Request.Context(), input.Email, input.Password)
 	if err != nil {
 		if errors.Is(err, services.ErrFailedOperation) {
-			c.JSON(http.StatusInternalServerError, gin.H{"message": ""})
+			c.JSON(http.StatusInternalServerError, gin.H{"message": ErrServerError.Error()})
+			return
 		}
 		c.JSON(http.StatusUnauthorized, gin.H{"message": err.Error()})
 		return
