@@ -15,17 +15,34 @@ var (
 	ErrInvalidToken = errors.New("the provided token is no valid")
 )
 
+type TokenType string
+type CustomClaims struct {
+	TokenType string `json:"token_type"`
+	jwt.RegisteredClaims
+}
+
+const (
+	TokenTypeAccess  TokenType = "ACCESS"
+	TokenTypeRefresh TokenType = "REFRESH"
+)
+
 type UserSession struct {
 	User         models.User `json:"user"`
 	RefreshToken string      `json:"refreshToken"`
 	ExpiresAt    time.Time   `json:"expiresAt"`
 }
 
-func GenerateToken(userID uuid.UUID, duration time.Duration) (string, error) {
+type UserAccess struct {
+	AccessToken string    `json:"accessToken"`
+	ExpiresAt   time.Time `json:"expiresAt"`
+}
+
+func GenerateToken(userID uuid.UUID, duration time.Duration, tokenType TokenType) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"iat": time.Now().UTC().UnixNano(),
-		"exp": time.Now().Add(duration).UnixNano(),
-		"sub": userID.String(),
+		"iat":        time.Now().UTC().UnixNano(),
+		"exp":        time.Now().Add(duration).UnixNano(),
+		"sub":        userID.String(),
+		"token_type": tokenType,
 	})
 
 	tokenString, err := token.SignedString([]byte(os.Getenv("TOKEN_SECRET")))
@@ -37,14 +54,19 @@ func GenerateToken(userID uuid.UUID, duration time.Duration) (string, error) {
 	return tokenString, nil
 }
 
-func ValidateToken(tokenStr string) (uuid.UUID, error) {
-	token, err := jwt.ParseWithClaims(tokenStr, &jwt.RegisteredClaims{}, func(t *jwt.Token) (any, error) {
+func ValidateToken(tokenStr string, tokenType TokenType) (uuid.UUID, error) {
+	token, err := jwt.ParseWithClaims(tokenStr, &CustomClaims{}, func(t *jwt.Token) (any, error) {
 		return []byte(os.Getenv("TOKEN_SECRET")), nil
 	})
 	if err != nil || !token.Valid {
 		return uuid.Nil, err
 	}
 
+	if claims, ok := token.Claims.(*CustomClaims); ok {
+		if claims.TokenType != string(tokenType) {
+			return uuid.Nil, ErrInvalidToken
+		}
+	}
 	userIDString, err := token.Claims.GetSubject()
 	if err != nil {
 		slog.Error("failed to fetch 'sub' claim", "error", err.Error())

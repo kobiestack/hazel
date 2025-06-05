@@ -163,7 +163,7 @@ func (us *UserService) NewSession(ctx context.Context, email string, password st
 	}
 
 	ttl := 15 * (24 * time.Hour)
-	refresh, err := auth.GenerateToken(user.Id, ttl)
+	refresh, err := auth.GenerateToken(user.Id, ttl, auth.TokenTypeRefresh)
 	if err != nil {
 		return nil, ErrFailedOperation
 	}

@@ -14,7 +14,7 @@
 
 ## 🔐 Authentication & Authorization (JWT)
 - [X] User registration
-- [ ] User login
+- [X] User login
 - [X] Password hashing (bcrypt)
 - [ ] JWT generation (access token)
 - [ ] JWT middleware for route protection
@@ -39,7 +39,8 @@
 ### Auth
 - [X] `POST /auth/register` – Register new user
 - [X] `POST /auth/verify` – Verify user email address
-- [ ] `POST /auth/login` – Authenticate and return JWT
+- [X] `POST /auth/login` – Authenticate and return JWT
+- [ ] `POST /auth/verify/request` - Request email verification code
 
 ### Users
 - [ ] `GET /users/me` – Get current user profile
