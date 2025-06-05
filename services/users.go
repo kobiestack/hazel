@@ -122,6 +122,8 @@ func (us *UserService) ResendVerificationEmail(ctx context.Context, email string
 	otpString := generateOTP()
 	otpHash := hashString(otpString)
 
+	slog.Debug("OTP verificatio code", "code", otpString) //TODO: delete this line later
+
 	userAddr := mail.Address{Email: email, Name: user.Name}
 	data := mail.Data{
 		Address: userAddr,

@@ -2,8 +2,10 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"github.com/freekobie/hazel/models"
 	"github.com/freekobie/hazel/services"
@@ -62,6 +64,31 @@ func (h *Handler) VerifyUser(c *gin.Context) {
 }
 
 func (h *Handler) RequestVerification(c *gin.Context) {
+	var input struct {
+		Email string `json:"email" binding:"required,email"`
+	}
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		slog.Error("failed to parse request body", "error", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": "failed to parse request body"})
+		return
+	}
+
+	err := h.us.ResendVerificationEmail(c.Request.Context(), input.Email)
+	if err != nil {
+		if errors.Is(err, models.ErrNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"message": err.Error()})
+			return
+		} else if strings.Contains(err.Error(), "user already verified") {
+			c.JSON(http.StatusUnprocessableEntity, gin.H{"message": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusInternalServerError, gin.H{"message": ErrServerError.Error()})
+		return
+	}
+
+	c.JSON(http.StatusAccepted, gin.H{"message": fmt.Sprintf("new verification code has ben sent to '%s'", input.Email)})
 
 }
 
