@@ -17,6 +17,7 @@ var (
 
 type TokenType string
 type CustomClaims struct {
+	Email     string `json:"email"`
 	TokenType string `json:"token_type"`
 	jwt.RegisteredClaims
 }
@@ -37,12 +38,13 @@ type UserAccess struct {
 	ExpiresAt   time.Time `json:"expiresAt"`
 }
 
-func GenerateToken(userID uuid.UUID, duration time.Duration, tokenType TokenType) (string, error) {
+func GenerateToken(userID uuid.UUID, email string, duration time.Duration, tokenType TokenType) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"iat":        time.Now().UTC().UnixNano(),
 		"exp":        time.Now().Add(duration).UnixNano(),
 		"sub":        userID.String(),
 		"token_type": tokenType,
+		"email":      email,
 	})
 
 	tokenString, err := token.SignedString([]byte(os.Getenv("TOKEN_SECRET")))
@@ -54,26 +56,19 @@ func GenerateToken(userID uuid.UUID, duration time.Duration, tokenType TokenType
 	return tokenString, nil
 }
 
-func ValidateToken(tokenStr string, tokenType TokenType) (uuid.UUID, error) {
+func ValidateToken(tokenStr string, tokenType TokenType) (*CustomClaims, error) {
 	token, err := jwt.ParseWithClaims(tokenStr, &CustomClaims{}, func(t *jwt.Token) (any, error) {
 		return []byte(os.Getenv("TOKEN_SECRET")), nil
 	})
 	if err != nil || !token.Valid {
-		return uuid.Nil, err
+		return nil, err
 	}
 
 	if claims, ok := token.Claims.(*CustomClaims); ok {
 		if claims.TokenType != string(tokenType) {
-			return uuid.Nil, ErrInvalidToken
+			return nil, ErrInvalidToken
 		}
+		return claims, err
 	}
-	userIDString, err := token.Claims.GetSubject()
-	if err != nil {
-		slog.Error("failed to fetch 'sub' claim", "error", err.Error())
-		return uuid.Nil, err
-	}
-
-	userID := uuid.MustParse(userIDString)
-
-	return userID, nil
+	return nil, errors.New("failed to validate token")
 }

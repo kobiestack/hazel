@@ -90,6 +90,32 @@ func (h *Handler) LoginUser(c *gin.Context) {
 	c.JSON(http.StatusOK, session)
 }
 
+func (h *Handler) GetUserAccessToken(c *gin.Context) {
+
+	var input struct {
+		RefresToken string `json:"refreshToken" binding:"required,jwt"`
+	}
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		slog.Error("failed to parse request body", "error", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": "failed to parse request body"})
+		return
+	}
+
+	access, err := h.us.RefreshSession(c.Request.Context(), input.RefresToken)
+	if err != nil {
+		if errors.Is(err, services.ErrFailedOperation) {
+			c.JSON(http.StatusInternalServerError, gin.H{"message": ErrServerError.Error()})
+			return
+		}
+		c.JSON(http.StatusUnauthorized, gin.H{"message": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, access)
+
+}
+
 func (h *Handler) GetUser(c *gin.Context) {
 	userId := c.Param("id")
 	if err := validate.Var(userId, "uuid"); err != nil {

@@ -12,6 +12,7 @@ func (s *application) routes() *gin.Engine {
 	// users
 	router.POST("/auth/register", s.h.CreateUser)
 	router.POST("/auth/login", s.h.LoginUser)
+	router.POST("/auth/access", s.h.GetUserAccessToken)
 	router.POST("/auth/verify", s.h.VerifyUser)
 	router.POST("/auth/verify/request", s.h.RequestVerification)
 

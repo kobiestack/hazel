@@ -17,13 +17,13 @@ func Authentication() gin.HandlerFunc {
 		}
 
 		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
-		userId, err := auth.ValidateToken(tokenString, auth.TokenTypeAccess)
+		claims, err := auth.ValidateToken(tokenString, auth.TokenTypeAccess)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "Invalid token"})
 			return
 		}
 
-		c.Set("user_id", userId)
+		c.Set("user_id", claims.Subject)
 
 		c.Next()
 	}

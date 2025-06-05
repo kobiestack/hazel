@@ -111,10 +111,12 @@ func (us *UserService) VerifyUser(ctx context.Context, code string, email string
 	return user, nil
 }
 
-func (us *UserService) ResendOTP(ctx context.Context, email string) error {
+func (us *UserService) ResendVerificationEmail(ctx context.Context, email string) error {
 	user, err := us.store.GetUserByMail(ctx, email)
 	if err != nil {
 		return err
+	} else if user.Verified {
+		return errors.New("user already verified")
 	}
 
 	otpString := generateOTP()
@@ -163,23 +165,69 @@ func (us *UserService) NewSession(ctx context.Context, email string, password st
 	}
 
 	ttl := 15 * (24 * time.Hour)
-	refresh, err := auth.GenerateToken(user.Id, ttl, auth.TokenTypeRefresh)
+	refresh, err := auth.GenerateToken(user.Id, user.Email, ttl, auth.TokenTypeRefresh)
 	if err != nil {
 		return nil, ErrFailedOperation
 	}
+
+	expiresAt := time.Now().Add(ttl)
+	tokenHash := hashString(refresh)
+	token := models.UserToken{
+		Hash:      tokenHash,
+		UserId:    user.Id,
+		ExpiresAt: expiresAt,
+		Scope:     AUTHENTICATION,
+	}
+
+	err = us.store.InsertToken(ctx, &token)
+	if err != nil {
+		return nil, err
+	}
+
 	session := &auth.UserSession{
 		User:         user,
 		RefreshToken: refresh,
-		ExpiresAt:    time.Now().Add(ttl),
+		ExpiresAt:    expiresAt,
 	}
 
 	return session, nil
 }
 
+func (us *UserService) RefreshSession(ctx context.Context, refreshToken string) (*auth.UserAccess, error) {
+	claims, err := auth.ValidateToken(refreshToken, auth.TokenTypeRefresh)
+	if err != nil {
+		slog.Error("failed token validation", "error", err.Error())
+		return nil, auth.ErrInvalidToken
+	}
+
+	hash := hashString(refreshToken)
+
+	user, err := us.store.GetUserForToken(ctx, hash, AUTHENTICATION, claims.Email)
+	if err != nil {
+		if errors.Is(err, models.ErrNotFound) {
+			return nil, ErrInvalidToken
+		}
+		return nil, err
+	}
+
+	ttl := 30 * time.Hour
+	accessToken, err := auth.GenerateToken(user.Id, user.Email, ttl, auth.TokenTypeAccess)
+	if err != nil {
+		return nil, err
+	}
+	// FIXME: obtain expiry time from GenerateToken function
+	useracc := &auth.UserAccess{
+		AccessToken: accessToken,
+		ExpiresAt:   time.Now().Add(ttl),
+	}
+
+	return useracc, nil
+}
+
 // UpdateUser updates an existing user's details
-func (s *UserService) UpdateUser(ctx context.Context, user *models.User) error {
+func (us *UserService) UpdateUser(ctx context.Context, user *models.User) error {
 	user.LastModifed = time.Now().UTC()
-	return s.store.UpdateUser(ctx, user)
+	return us.store.UpdateUser(ctx, user)
 }
 
 // FetchUser retrieves a user by ID or email
