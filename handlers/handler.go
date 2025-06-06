@@ -14,12 +14,12 @@ func init() {
 
 type Handler struct {
 	us  *services.UserService
-	wks *services.WorkspaceService
+	wss *services.WorkspaceService
 }
 
 func NewHandler(us *services.UserService, wks *services.WorkspaceService) *Handler {
 	return &Handler{
 		us:  us,
-		wks: wks,
+		wss: wks,
 	}
 }

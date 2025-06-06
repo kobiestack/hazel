@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/freekobie/hazel/models"
@@ -9,25 +8,30 @@ import (
 	"github.com/google/uuid"
 )
 
-func (h *Handler) CreateWorkspace(g *gin.Context) {
+func (h *Handler) CreateWorkspace(c *gin.Context) {
 	var input struct {
 		Name        string    `json:"name" binding:"required"`
 		Description string    `json:"description"`
 		UserID      uuid.UUID `json:"userId" binding:"required,uuid"`
 	}
 
-	err := g.ShouldBindJSON(&input)
+	err := c.ShouldBindJSON(&input)
 	if err != nil {
-		g.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
 
 	ws := &models.Workspace{
 		Name:        input.Name,
 		Description: input.Description,
-		UserID:      input.UserID,
+		User:        &models.User{Id: input.UserID},
 	}
 
-	fmt.Println(ws)
+	err = h.wss.NewWorkspace(c.Request.Context(), ws)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
 
+	c.JSON(http.StatusCreated, gin.H{"message": "new workspace created"})
 }

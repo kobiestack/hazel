@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/freekobie/hazel/models"
+	"github.com/google/uuid"
 )
 
 type WorkspaceService struct {
@@ -18,6 +19,8 @@ func NewWorkspaceService(store models.WorkspaceStore) *WorkspaceService {
 }
 
 func (s *WorkspaceService) NewWorkspace(ctx context.Context, ws *models.Workspace) error {
+	ws.Id = uuid.New()
+
 	err := s.store.Create(ctx, ws)
 	if err != nil {
 		return err

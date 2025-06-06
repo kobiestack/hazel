@@ -19,7 +19,7 @@ import (
 func setupTestDB(t *testing.T) *pgxpool.Pool {
 	connStr := os.Getenv("TEST_DB_URL")
 	if connStr == "" {
-		connStr = "postgres://kobie:pa88word@localhost:5432/hazel_test?sslmode=disable"
+		connStr = "postgres://userone:pa88word@localhost:5432/hazel_test?sslmode=disable"
 	}
 
 	pool, err := pgxpool.New(context.Background(), connStr)

@@ -40,7 +40,7 @@
 - [X] `POST /auth/register` – Register new user
 - [X] `POST /auth/verify` – Verify user email address
 - [X] `POST /auth/login` – Authenticate and return JWT
-- [ ] `POST /auth/verify/request` - Request email verification code
+- [X] `POST /auth/verify/request` - Request email verification code
 
 ### Users
 - [ ] `GET /users/me` – Get current user profile
@@ -79,9 +79,9 @@
 ## ⚙️ Middleware & Utilities
 - [X] JWT authentication middleware
 - [ ] Error handling middleware
-- [ ] Request logging (e.g., Gin's logger or `zap`)
-- [ ] Rate limiting (e.g., `golang.org/x/time/rate`)
-- [X] Input validation (e.g., `go-playground/validator`)
+- [ ] Request logging (Gin's logger or `zap`)
+- [ ] Rate limiting (`golang.org/x/time/rate`)
+- [X] Input validation (`go-playground/validator`)
 
 ---
 
