@@ -21,8 +21,7 @@ func (h *Handler) CreateUser(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
-		slog.Error("failed to read request body", "error", err)
-		c.JSON(http.StatusBadRequest, gin.H{"message": "failed to parse request body"})
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
 
@@ -46,7 +45,7 @@ func (h *Handler) VerifyUser(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "failed to parse request body"})
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
 
@@ -69,8 +68,7 @@ func (h *Handler) RequestVerification(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
-		slog.Error("failed to parse request body", "error", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"message": "failed to parse request body"})
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
 
@@ -99,8 +97,7 @@ func (h *Handler) LoginUser(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
-		slog.Error("failed to parse request body", "error", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"message": "failed to parse request body"})
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
 
@@ -124,8 +121,7 @@ func (h *Handler) GetUserAccessToken(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
-		slog.Error("failed to parse request body", "error", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"message": "failed to parse request body"})
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
 
@@ -161,6 +157,33 @@ func (h *Handler) GetUser(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, user)
+}
+
+func (h *Handler) UpdateProfile(c *gin.Context) {
+	var input map[string]any
+
+	err := c.ShouldBindJSON(&input)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	idString, ok := c.Get("user_id")
+	if !ok {
+		slog.Error("failed to fetch user id from context")
+		c.JSON(http.StatusInternalServerError, gin.H{"message": ErrServerError.Error()})
+		return
+	}
+
+	id := uuid.MustParse(idString.(string))
+	input["id"] = id
+
+	err = h.us.UpdateUser(c.Request.Context(), input)
+
+}
+
+func (h *Handler) UpdateCredentials(c *gin.Context) {
+
 }
 
 func (h *Handler) DeleteUser(c *gin.Context) {

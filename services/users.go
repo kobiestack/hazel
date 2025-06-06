@@ -227,9 +227,9 @@ func (us *UserService) RefreshSession(ctx context.Context, refreshToken string) 
 }
 
 // UpdateUser updates an existing user's details
-func (us *UserService) UpdateUser(ctx context.Context, user *models.User) error {
-	user.LastModifed = time.Now().UTC()
-	return us.store.UpdateUser(ctx, user)
+func (us *UserService) UpdateUser(ctx context.Context, user map[string]any) error {
+
+	return nil
 }
 
 // FetchUser retrieves a user by ID or email
