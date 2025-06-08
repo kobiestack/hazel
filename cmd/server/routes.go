@@ -20,6 +20,7 @@ func (s *application) routes() *gin.Engine {
 	authorized.Use(middlewares.Authentication())
 	{
 		authorized.GET("/users/:id", s.h.GetUser)
+		authorized.PATCH("/users/profile", s.h.UpdateUserData)
 		authorized.DELETE("/users/:id", s.h.DeleteUser)
 	}
 

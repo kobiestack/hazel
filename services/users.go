@@ -18,6 +18,7 @@ var (
 	ErrUnverifiedUser     = errors.New("user has an unverified email")
 	ErrInvalidToken       = errors.New("token is invalid or expired")
 	ErrFailedOperation    = errors.New("failed to complete operation")
+	ErrInvalidPassword    = errors.New("password must be between 8 and 20 characters")
 )
 
 const (
@@ -227,9 +228,57 @@ func (us *UserService) RefreshSession(ctx context.Context, refreshToken string) 
 }
 
 // UpdateUser updates an existing user's details
-func (us *UserService) UpdateUser(ctx context.Context, user map[string]any) error {
+func (us *UserService) UpdateUser(ctx context.Context, userData map[string]any) (*models.User, error) {
+	id, ok := userData["id"]
+	if !ok {
+		return nil, errors.New("user id not found")
+	}
 
-	return nil
+	user, err := us.store.GetUser(ctx, id.(uuid.UUID))
+	if err != nil {
+		return nil, err
+	}
+
+	name, ok := userData["name"]
+	if ok {
+		user.Name = name.(string)
+	}
+
+	profilePhoto, ok := userData["profilePhoto"]
+	if ok {
+		user.ProfilePhoto = profilePhoto.(string)
+	}
+
+	password, ok := userData["password"]
+	if ok {
+		if len(password.(string)) < 8 || len(password.(string)) > 20 {
+			return nil, ErrInvalidPassword
+		}
+		err = bcrypt.CompareHashAndPassword(user.PasswordHash, []byte(password.(string)))
+		if err != nil {
+			if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
+				hash, err := bcrypt.GenerateFromPassword([]byte(password.(string)), bcrypt.DefaultCost)
+				if err != nil {
+					return nil, ErrFailedOperation
+				}
+
+				user.PasswordHash = hash
+			} else {
+				slog.Error("failed to compare password and hash", "error", err.Error())
+				return nil, ErrFailedOperation
+			}
+		}
+
+	}
+
+	user.LastModifed = time.Now().UTC()
+
+	err = us.store.UpdateUser(ctx, &user)
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
 }
 
 // FetchUser retrieves a user by ID or email

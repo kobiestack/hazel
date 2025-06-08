@@ -43,8 +43,9 @@
 - [X] `POST /auth/verify/request` - Request email verification code
 
 ### Users
+- [X] `GET /users/:id` – Get current profile
 - [ ] `GET /users/me` – Get current user profile
-- [ ] `PATCH /users/me` – Update user profile
+- [X] `PATCH /users/me` – Update user profile
 - [ ] `DELETE /users/me` – Delete account
 
 ### Workspaces

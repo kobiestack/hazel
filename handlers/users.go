@@ -159,9 +159,8 @@ func (h *Handler) GetUser(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
-func (h *Handler) UpdateProfile(c *gin.Context) {
+func (h *Handler) UpdateUserData(c *gin.Context) {
 	var input map[string]any
-
 	err := c.ShouldBindJSON(&input)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
@@ -178,12 +177,17 @@ func (h *Handler) UpdateProfile(c *gin.Context) {
 	id := uuid.MustParse(idString.(string))
 	input["id"] = id
 
-	err = h.us.UpdateUser(c.Request.Context(), input)
+	user, err := h.us.UpdateUser(c.Request.Context(), input)
+	if err != nil {
+		if !errors.Is(err, services.ErrFailedOperation) {
+			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"message": ErrServerError.Error()})
+		return
+	}
 
-}
-
-func (h *Handler) UpdateCredentials(c *gin.Context) {
-
+	c.JSON(http.StatusOK, user)
 }
 
 func (h *Handler) DeleteUser(c *gin.Context) {
