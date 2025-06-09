@@ -33,5 +33,5 @@ func (h *Handler) CreateWorkspace(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"message": "new workspace created"})
+	c.JSON(http.StatusCreated, ws)
 }

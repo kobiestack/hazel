@@ -20,20 +20,39 @@ func NewWorkspaceStore(conn *pgxpool.Pool) models.WorkspaceStore {
 }
 
 // Create implements models.WorkspaceStore.
-func (w *WorkspaceStore) Create(ctx context.Context, wrk *models.Workspace) error {
-	query := `INSERT INTO workspaces(id, name, description, user_id, created_at, last_modified)
-	VALUES($1, $2, $3, $4, now(), now());`
+func (w *WorkspaceStore) Create(ctx context.Context, ws *models.Workspace) error {
+	wsquery := `INSERT INTO workspaces(id, name, description, user_id, created_at, last_modified)
+	VALUES($1, $2, $3, $4, $5, $5);`
 
-	_, err := w.conn.Exec(ctx, query, wrk.Id, wrk.Name, wrk.Description, wrk.User.Id)
+	memberquery := `INSERT INTO workspace_memberships(workspace_id, user_id)
+	VALUES($1, $2)`
+
+	tx, err := w.conn.Begin(ctx)
+	if err != nil {
+		slog.Error("failed to start transaction", "error", err)
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	_, err = tx.Exec(ctx, wsquery, ws.Id, ws.Name, ws.Description, ws.User.Id, ws.CreatedAt)
 	if err != nil {
 		slog.Error("failed to create workspace", "error", err)
 		return err
 	}
 
+	_, err = tx.Exec(ctx, memberquery, ws.Id, ws.User.Id)
+	if err != nil {
+		slog.Error("failed to create workspace membership", "error", err)
+		return err
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		slog.Error("failed to complete transactions", "error", err)
+		return err
+	}
+
 	return nil
 }
-
-
 
 // Get implements models.WorkspaceStore.
 func (w *WorkspaceStore) Get(ctx context.Context, id uuid.UUID) (models.Workspace, error) {

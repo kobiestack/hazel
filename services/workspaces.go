@@ -20,7 +20,9 @@ func NewWorkspaceService(store models.WorkspaceStore) *WorkspaceService {
 
 func (s *WorkspaceService) NewWorkspace(ctx context.Context, ws *models.Workspace) error {
 	ws.Id = uuid.New()
-
+	createdAt := time.Now().UTC()
+	ws.CreatedAt = createdAt
+	ws.LastModified = createdAt
 	err := s.store.Create(ctx, ws)
 	if err != nil {
 		return err
