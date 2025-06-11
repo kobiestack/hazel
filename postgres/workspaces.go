@@ -163,3 +163,29 @@ func (w *WorkspaceStore) Delete(ctx context.Context, id uuid.UUID) error {
 
 	return nil
 }
+
+func (w *WorkspaceStore) AddMembership(ctx context.Context, workspaceId, userId uuid.UUID, role string) error {
+	query := `INSERT INTO workspace_memberships(workspace_id, user_id, role, created_at)
+	VALUES($1, $2, $3, now());`
+
+	_, err := w.conn.Exec(ctx, query, workspaceId, userId, role)
+	if err != nil {
+		slog.Error("failed to insert membership", "error", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (w *WorkspaceStore) DeleteMembership(ctx context.Context, workspaceId, userId uuid.UUID) error {
+	delQuery := `DELETE FROM workspace_memberships
+	WHERE workspace_id = $1 AND user_id = $2 AND NOT role = 'owner';`
+
+	_, err := w.conn.Exec(ctx, delQuery, workspaceId, userId)
+	if err != nil {
+		slog.Error("failed to delete membership", "error", err.Error())
+		return err
+	}
+
+	return nil
+}

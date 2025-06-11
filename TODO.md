@@ -24,7 +24,7 @@
 
 ## Core Models & Database Schema
 - [X] User
-- [ ] Workspace
+- [X] Workspace
 - [ ] Project (belongs to Workspace)
 - [ ] Task (belongs to Project)
 - [ ] Comment (optional, belongs to Task)
@@ -52,10 +52,9 @@
 - [X] `GET /workspaces` – List all user workspaces
 - [X] `GET /workspaces/:id` – Get specific workspace
 - [X] `PATCH /workspaces/:id` – Update workspace
-- [ ] `DELETE /workspaces/:id` – Delete workspace
-- [ ] `POST /workspaces/:id/member` - Join a workspace
-- [ ] `DELETE /workspaces/:id/member` - Leave a workspace
-- [ ] fix user role in fetch user workspaces response.
+- [X] `DELETE /workspaces/:id` – Delete workspace
+- [X] `POST /workspaces/:id/member` - Join a workspace
+- [X] `DELETE /workspaces/:id/member` - Leave a workspace
 
 ### Projects
 - [ ] `POST /workspaces/:workspaceId/projects` – Create project

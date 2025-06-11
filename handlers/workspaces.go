@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/freekobie/hazel/models"
+	"github.com/freekobie/hazel/services"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -115,4 +116,61 @@ func (h *Handler) DeleteWorkspace(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "workspace successfully deleted"})
+}
+
+func (h *Handler) AddWorkspaceMember(c *gin.Context) {
+	wrkId := c.Param("id")
+	if err := validate.Var(wrkId, "uuid"); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid id format"})
+		return
+	}
+
+	var input struct {
+		UserId uuid.UUID `json:"userId" validate:"required,uuid"`
+		Role   string    `json:"role" validate:"required"`
+	}
+
+	err := c.ShouldBindJSON(&input)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	err = h.wss.AddWorkspaceMember(c.Request.Context(), uuid.MustParse(wrkId), input.UserId, input.Role)
+	if err != nil {
+		if errors.Is(err, services.ErrFailedOperation) {
+			c.JSON(http.StatusInternalServerError, gin.H{"message": ErrServerError.Error()})
+			return
+		}
+
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"message": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "workspace member successfully added"})
+}
+
+func (h *handler) GetWorkspaceMembers(c *gin.Context) {
+
+}
+
+func (h *Handler) DeleteWorkspaceMember(c *gin.Context) {
+	wrkId := c.Param("id")
+	if err := validate.Var(wrkId, "uuid"); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid id format"})
+		return
+	}
+	memberId := c.Param("member_id")
+	if err := validate.Var(memberId, "uuid"); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid id format"})
+		return
+	}
+
+	err := h.wss.DeleteWorkspaceMember(c.Request.Context(), uuid.MustParse(wrkId), uuid.MustParse(memberId))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": ErrServerError.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "workspace member successfully deleted"})
 }

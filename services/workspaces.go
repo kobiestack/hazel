@@ -2,6 +2,8 @@ package services
 
 import (
 	"context"
+	"errors"
+	"strings"
 	"time"
 
 	"github.com/freekobie/hazel/models"
@@ -23,7 +25,7 @@ func (s *WorkspaceService) NewWorkspace(ctx context.Context, ws *models.Workspac
 	createdAt := time.Now().UTC()
 	ws.CreatedAt = createdAt
 	ws.LastModified = createdAt
-	ws.User.Role = "admin"
+	ws.User.Role = "owner"
 
 	err := s.store.Create(ctx, ws)
 	if err != nil {
@@ -78,4 +80,21 @@ func (s *WorkspaceService) UpdateWorkspace(ctx context.Context, wsData map[strin
 
 func (s *WorkspaceService) DeleteWorkspace(ctx context.Context, id uuid.UUID) error {
 	return s.store.Delete(ctx, id)
+}
+
+func (s *WorkspaceService) AddWorkspaceMember(ctx context.Context, workspaceId, userId uuid.UUID, role string) error {
+	err := s.store.AddMembership(ctx, workspaceId, userId, role)
+	if err != nil {
+		if strings.Contains(err.Error(), "SQLSTATE 23505") {
+			return errors.New("user already a member of workspace")
+		}
+
+		return ErrFailedOperation
+	}
+
+	return nil
+}
+
+func (s *WorkspaceService) DeleteWorkspaceMember(ctx context.Context, workspaceId, userId uuid.UUID) error {
+	return s.store.DeleteMembership(ctx, workspaceId, userId)
 }

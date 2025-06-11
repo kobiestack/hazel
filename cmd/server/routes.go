@@ -30,7 +30,8 @@ func (s *application) routes() *gin.Engine {
 		authorized.GET("/workspaces/me", s.h.GetUserWorkspaces)
 		authorized.PATCH("/workspaces/:id", s.h.UpdateWorkspace)
 		authorized.DELETE("/workspaces/:id", s.h.DeleteWorkspace)
-		authorized.GET("/workspaces/:id/members")
+		authorized.POST("/workspaces/:id/members", s.h.AddWorkspaceMember)
+		authorized.DELETE("/workspaces/:id/members/:member_id", s.h.DeleteWorkspaceMember)
 
 		// projects
 
