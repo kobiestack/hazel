@@ -9,6 +9,7 @@ import (
 type Config struct {
 	MailConfig  *mail.Config
 	PostgresURL string
+	ServerAddress string
 }
 
 func loadConfig() *Config {
@@ -23,5 +24,6 @@ func loadConfig() *Config {
 	return &Config{
 		MailConfig:  mailCfg,
 		PostgresURL: os.Getenv("DB_URL"),
+		ServerAddress: os.Getenv("PORT"),
 	}
 }

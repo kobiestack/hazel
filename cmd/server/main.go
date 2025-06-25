@@ -3,6 +3,10 @@ package main
 import (
 	"context"
 	"log/slog"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/freekobie/hazel/handlers"
 	"github.com/freekobie/hazel/mail"
@@ -26,18 +30,34 @@ func main() {
 	}
 
 	mailer := mail.NewMailer(cfg.MailConfig)
-	us := services.NewUserService(postgres.NewUserStore(db), mailer)
-	ws := services.NewWorkspaceService(postgres.NewWorkspaceStore(db))
+	userService := services.NewUserService(postgres.NewUserStore(db), mailer)
+	workspaceService := services.NewWorkspaceService(postgres.NewWorkspaceStore(db))
 
-	handler := handlers.NewHandler(us, ws)
+	handler := handlers.NewHandler(userService, workspaceService)
 
-	app := &application{
-		h: handler,
-	}
+	app := newApplication(handler, cfg.ServerAddress)
 
-	slog.Info("Starting server")
-	err = app.start()
-	if err != nil {
-		panic(err)
+	// Graceful shutdown setup
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+
+	serverErr := make(chan error, 1)
+	go func() {
+		slog.Info("Starting server")
+		serverErr <- app.start()
+	}()
+
+	select {
+	case err := <-serverErr:
+		if err != nil {
+			panic(err)
+		}
+	case sig := <-stop:
+		slog.Info("Shutting down server", "signal", sig)
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		if err := app.shutdown(ctx); err != nil {
+			slog.Error("Graceful shutdown failed", "error", err)
+		}
 	}
 }
