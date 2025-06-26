@@ -1,3 +1,25 @@
-version: "3"
-
 name: "hazel-backend"
+
+services:
+  api:
+    build: .
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    depends_on:
+      - database
+
+  database:
+    image: "postgres:alpine"
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: "hazel_db"
+      POSTGRES_USER: "userone"
+      POSTGRES_PASSWORD: "pa88word"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+volumes:
+  db-data:

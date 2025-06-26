@@ -4,17 +4,10 @@ import (
 	"io"
 	"log/slog"
 	"os"
-
-	"github.com/joho/godotenv"
 )
 
-func init() {
+func setupLogging() {
 	var err error
-	err = godotenv.Load()
-	if err != nil {
-		panic(err)
-	}
-
 	var writer io.Writer
 	if os.Getenv("ENV") != "dev" {
 		writer, err = os.OpenFile("hazel.log", os.O_CREATE|os.O_RDWR, 0755)
