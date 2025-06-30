@@ -16,12 +16,12 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// @title Hazel Project Management API
-// @version 1.0
-// @description This is the backend API for the Hazel project management application.
-// @contact.name API Support
-// @contact.url https://github.com/freekobie/hazel
-// @contact.email support@hazel.local
+//	@title			Hazel Project Management API
+//	@version		1.0
+//	@description	This is the backend API for the Hazel project management application.
+//	@contact.name	API Support
+//	@contact.url	https://github.com/freekobie/hazel
+//	@contact.email	support@hazel.local
 func main() {
 
 	_ = godotenv.Load()
